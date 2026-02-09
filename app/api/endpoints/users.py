@@ -6,7 +6,7 @@ from app.schemas.user_model import login, create_user, UserResponse
 from app.db.database import get_db
 from sqlalchemy.orm import Session
 from app.db.models.user import User
-from app.services.Users.user_functions import user_creation, user_logout, user_login_function, get_current_user
+from app.services.users.user_functions import user_creation, user_logout, user_login_function, get_current_user
 
 router = APIRouter(prefix="/users", tags=["users"])
 security = HTTPBearer()
