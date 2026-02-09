@@ -26,6 +26,8 @@ async def user_login(user: login, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
+
 @router.get("/user_profile")
 async def get_logged_in_user_profile(
     current_user: User = Depends(get_current_user),

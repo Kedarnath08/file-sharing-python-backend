@@ -9,6 +9,9 @@ from jose import jwt, JWTError
 from app.schemas.user_model import login 
 from app.db.database import get_db
 from app.core.utils import verify_password
+from fastapi import Request, Depends, HTTPException
+from jose import jwt, JWTError
+
 
 SECRET_KEY = "MOBILE_APP"  # move to env var in real apps
 ALGORITHM = "HS256"
@@ -58,8 +61,7 @@ async def user_login_function(user_data: login, db: Session):
     }
 
 
-from fastapi import Request, Depends, HTTPException
-from jose import jwt, JWTError
+
 
 async def get_current_user(
     request: Request,

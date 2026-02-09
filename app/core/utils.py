@@ -1,6 +1,7 @@
 
 from fastapi import HTTPException, status
 import traceback
+from passlib.context import CryptContext
 
 def handle_internal_server_error(exc: Exception):
     """
@@ -22,7 +23,7 @@ def handle_internal_server_error(exc: Exception):
         }
     )
 
-from passlib.context import CryptContext
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
