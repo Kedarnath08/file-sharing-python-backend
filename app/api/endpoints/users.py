@@ -1,13 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException
-from app.schemas.user_model import login, create_user
-from app.db.models.connection import get_db
+from fastapi import APIRouter, Depends, HTTPException, Security
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from app.schemas.user_model import login, create_user, UserResponse
+from app.db.database import get_db
 from sqlalchemy.orm import Session
-from app.services.user_functions import user_creation, user_logout, user_login_function
+from app.db.models.user import User
+from app.services.Users.user_functions import user_creation, user_logout, user_login_function, get_current_user
 
 router = APIRouter(prefix="/users", tags=["users"])
+security = HTTPBearer()
 
-
-@router.post("/create_user", response_model=create_user)
+@router.post("/create_user", response_model=UserResponse)
 async def create_new_user(user: create_user, db: Session = Depends(get_db)):
     '''Endpoint to create a new user.'''
     try:
@@ -16,7 +18,7 @@ async def create_new_user(user: create_user, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.post("/login", response_model=login)
+@router.post("/login")
 async def user_login(user: login, db: Session = Depends(get_db)):
     try:
         result = await user_login_function(user, db)
@@ -24,9 +26,19 @@ async def user_login(user: login, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
+
 @router.get("/user_profile")
-async def get_logged_in_user_profile(db: Session = Depends(get_db)):
-    return {"message": "User profile retrieved successfully"}
+async def get_logged_in_user_profile(
+    current_user: User = Depends(get_current_user),
+    credentials: HTTPAuthorizationCredentials = Security(security)
+):
+    return {
+        "username": current_user.username,
+        "email": current_user.email,
+        "created_at": current_user.created_at
+    }
+
 
 
 @router.get("/user_list")
