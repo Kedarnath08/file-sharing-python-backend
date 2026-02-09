@@ -32,8 +32,10 @@ def hash_password(password: str) -> str:
 
 async def user_creation(user_data, db):
     db_user = User(
+        fullname=user_data.fullname,
         username=user_data.username,
         email=user_data.email,
+        phone_number=user_data.phone_number,
         hashed_password=hash_password(user_data.password),
     )
     db.add(db_user)

@@ -1,4 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr
+from datetime import datetime
+
 
 class login(BaseModel):
     """Schema for user login requests."""
@@ -14,6 +17,7 @@ class LoginResponse(BaseModel):
 class create_user(BaseModel):
     """Schema for new user creation requests."""
 
+    fullname: str = Field(..., min_length=3, max_length=100, example="John Doe")
     username: str = Field(..., min_length=3, max_length=50, pattern=r'^[a-zA-Z0-9_.-]+$', example="johndoe")
     email: EmailStr = Field(..., example="user@example.com")
     password: str = Field(..., min_length=8, max_length=28, example="StrongP@ssw0rd")
@@ -27,3 +31,14 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True  # REQUIRED for SQLAlchemy ORM
+
+
+class UserListResponse(BaseModel):
+    id: int
+    fullname: str
+    username: str
+    email: EmailStr
+    phone_number: str
+    
+    class Config:
+        from_attributes = True
