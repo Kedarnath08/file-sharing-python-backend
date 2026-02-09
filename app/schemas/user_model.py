@@ -6,6 +6,9 @@ class login(BaseModel):
     username: str = Field(..., min_length=3, max_length=50, pattern=r'^[a-zA-Z0-9_.-]+$', example="johndoe")
     password: str = Field(..., min_length=8, max_length=20, example="StrongP@ssw0rd")
 
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str
 
 
 class create_user(BaseModel):
@@ -17,3 +20,10 @@ class create_user(BaseModel):
     phone_number: str = Field(..., pattern=r'^\+?\d{7,15}$', example="+1234567890")
 
 
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: EmailStr
+
+    class Config:
+        from_attributes = True  # REQUIRED for SQLAlchemy ORM

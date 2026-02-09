@@ -5,4 +5,5 @@ SQLAlchemy==2.0.46
 uvicorn==0.39.0
 pydantic[email]==2.12.5
 python-jose==3.3.0
-passlib[bcrypt]==1.7.4
+passlib==1.7.4 
+bcrypt==3.2.2

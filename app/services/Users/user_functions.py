@@ -1,20 +1,24 @@
 import bcrypt
 from app.db.models.user import User
 from datetime import datetime, timedelta
-from jose import jwt
+from sqlalchemy.orm import Session
+from fastapi import HTTPException
+from app.db.models.user import User
 import bcrypt
-from datetime import timedelta
+from jose import jwt, JWTError
+from app.schemas.user_model import login 
+from app.db.database import get_db
+from app.core.utils import verify_password
 
 SECRET_KEY = "MOBILE_APP"  # move to env var in real apps
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
+def create_access_token(data: dict):
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 #function to hash the password
 def hash_password(password: str) -> str:
@@ -24,43 +28,72 @@ def hash_password(password: str) -> str:
     return hashed.decode('utf-8')
 
 async def user_creation(user_data, db):
-    # user creation logic 
     db_user = User(
         username=user_data.username,
         email=user_data.email,
         hashed_password=hash_password(user_data.password),
-        is_active=True
     )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    return {"message": "User created successfully", "user": db_user}
+    return db_user
 
 
-async def user_login_function(user_data, db):
-    # Find user
-    db_user = db.query(User).filter(User.username == user_data.username).first()
-    if not db_user:
-        raise Exception("User not found")
 
-    # Check password
-    if not bcrypt.checkpw(
-        user_data.password.encode("utf-8"),
-        db_user.hashed_password.encode("utf-8")
-    ):
-        raise Exception("Invalid credentials")
 
-    # Create access token
-    access_token_expires = timedelta(minutes=30)
+async def user_login_function(user_data: login, db: Session):
+    user = db.query(User).filter(User.username == user_data.username).first()
+
+    if not user or not verify_password(user_data.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+
     access_token = create_access_token(
-        data={"sub": db_user.username, "user_id": db_user.id},
-        expires_delta=access_token_expires
+        data={"sub": user.username},
+        # expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
     return {
         "access_token": access_token,
         "token_type": "bearer"
     }
+
+
+from fastapi import Request, Depends, HTTPException
+from jose import jwt, JWTError
+
+async def get_current_user(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    auth_header = request.headers.get("Authorization")
+
+    if not auth_header:
+        raise HTTPException(status_code=401, detail="Authorization header missing")
+
+    try:
+        scheme, token = auth_header.split(" ")
+        if scheme.lower() != "bearer":
+            raise HTTPException(status_code=401, detail="Invalid auth scheme")
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Invalid authorization header")
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub")
+        if not username:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    user = db.query(User).filter(User.username == username).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    return user
+
+
+
+
 
     
 
