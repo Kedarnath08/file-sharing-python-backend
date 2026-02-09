@@ -1,4 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Security
+from typing import List
+from app.schemas.user_model import UserListResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.schemas.user_model import login, create_user, UserResponse
 from app.db.database import get_db
@@ -41,9 +43,18 @@ async def get_logged_in_user_profile(
 
 
 
-@router.get("/user_list")
-async def get_users_list(db: Session = Depends(get_db)):
-    return {"message": "User list retrieved successfully"}
+@router.get("/user_list", response_model=List[UserListResponse])
+async def get_users_list(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    credentials: HTTPAuthorizationCredentials = Security(security)
+):
+    users = (
+        db.query(User)
+        .filter(User.id != current_user.id)
+        .all()
+    )
+    return users
 
 
 @router.post("/logout")
