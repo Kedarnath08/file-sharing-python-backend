@@ -10,6 +10,8 @@ class UploadedFiles(Base):
     owner_id = Column(String, index=True)
     file_path = Column(String)
     file_name = Column(String)
+    file_size = Column(String)
+    file_type = Column(String)
     # upload_time = Column(DateTime, default=datetime.now(timezone.utc).isoformat())
     upload_time = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
@@ -20,6 +22,7 @@ class SharedFiles(Base):
     file_id = Column(String, index=True)
     sender_id = Column(String)
     receiver_id = Column(String)    
-    shared_time = Column(DateTime, default=datetime.now(timezone.utc).isoformat())
+    # shared_time = Column(DateTime, default=datetime.now(timezone.utc).isoformat())
+    shared_time = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 Base.metadata.create_all(bind=engine)

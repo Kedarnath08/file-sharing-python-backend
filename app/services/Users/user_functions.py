@@ -53,7 +53,10 @@ async def user_login_function(user_data: login, db: Session):
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
     access_token = create_access_token(
-        data={"sub": user.username},
+        data={
+            "sub": user.username,
+            "id": user.id
+            },
         # expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
