@@ -36,6 +36,7 @@ async def get_logged_in_user_profile(
     credentials: HTTPAuthorizationCredentials = Security(security)
 ):
     return {
+        "fullname": current_user.fullname,
         "username": current_user.username,
         "email": current_user.email,
         "created_at": current_user.created_at
@@ -62,6 +63,6 @@ async def logout(db: Session = Depends(get_db)):
     user = await user_logout(db)
     if user == 0:
         raise HTTPException(status_code=400, detail="No active user found to logout")
-    return {"status": user, "message": "Logout successful"}
+    return {"user_id": user, "message": "Logout successful"}
 
 

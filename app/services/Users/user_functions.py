@@ -36,6 +36,7 @@ async def user_creation(user_data, db):
         username=user_data.username,
         email=user_data.email,
         phone_number=user_data.phone_number,
+        is_active=True,
         hashed_password=hash_password(user_data.password),
     )
     db.add(db_user)
@@ -52,6 +53,10 @@ async def user_login_function(user_data: login, db: Session):
     if not user or not verify_password(user_data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
+    user.is_active = True
+    db.commit()
+    db.refresh(user)
+    
     access_token = create_access_token(
         data={
             "sub": user.username,
@@ -97,10 +102,6 @@ async def get_current_user(
         raise HTTPException(status_code=401, detail="User not found")
 
     return user
-
-
-
-
 
     
 
